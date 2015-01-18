@@ -9,7 +9,9 @@ output:
 
 ```r
 opts_chunk$set(echo=TRUE)
+opts_chunk$set(warning = FALSE)
 setwd("~/R Code/RepData_PeerAssessment1")
+library(lattice)
 ```
 
 ## Load the data in a usable form and display a summary of data
@@ -92,5 +94,28 @@ MedianStepsNew <- median(TotalStepsDay_New$steps)
 ### There are 2304 missing observations.
 ### The mean number of steps after NA replacement is 10766.
 ### The median number of steps after NA replacement is 10766.
+### The mean after replacement differs by 0.
+### The median after replacement differs by -1.
 
-## Are there differences in activity patterns between weekdays and weekends?
+## Determine if there are differences in activity patterns between weekends and weekdays (use the data with NA's filled in)
+### Note that Saturday and Sundays are considered weekend days
+
+```r
+## first we need to find the day type for each observation
+ActualDay <- weekdays(as.Date(NewData$date)) ##extract the actual day
+DayType <- rep("weekday",length(ActualDay))
+##find weekends and then replace DayType "weekday" with "weekend"
+IsSun <- ActualDay == "Sunday"
+DayType[IsSun] <- "weekend"
+IsSat <- ActualDay == "Saturday"
+DayType[IsSat] <- "weekend"
+DayType <- factor(DayType)
+## append data set with the day type
+NewData <- cbind(NewData,DayType)
+## average by interval and day type
+AveSteps <- aggregate(NewData,list(NewData$interval,NewData$DayType),FUN=mean)
+## plot the data
+xyplot(steps ~ Group.1 | Group.2, data = AveSteps, layout = c(1,2),type = "l",xlab = "5Min Int", ylab = "Ave Num Steps")
+```
+
+![plot of chunk weekdaystudy](figure/weekdaystudy-1.png) 

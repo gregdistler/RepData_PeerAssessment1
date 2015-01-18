@@ -8,7 +8,9 @@ output:
 ## Set default options and your working directory
 ```{r setoptions, echo=TRUE}
 opts_chunk$set(echo=TRUE)
+opts_chunk$set(warning = FALSE)
 setwd("~/R Code/RepData_PeerAssessment1")
+library(lattice)
 ```
 
 ## Load the data in a usable form and display a summary of data
@@ -65,4 +67,22 @@ MedianStepsNew <- median(TotalStepsDay_New$steps)
 ### The mean after replacement differs by `r sprintf("%0.0f",MeanSteps - MeanStepsNew)`.
 ### The median after replacement differs by `r sprintf("%0.0f",MedianSteps - MedianStepsNew)`.
 
-## Are there differences in activity patterns between weekdays and weekends?
+## Determine if there are differences in activity patterns between weekends and weekdays (use the data with NA's filled in)
+### Note that Saturday and Sundays are considered weekend days
+``` {r weekdaystudy}
+## first we need to find the day type for each observation
+ActualDay <- weekdays(as.Date(NewData$date)) ##extract the actual day
+DayType <- rep("weekday",length(ActualDay))
+##find weekends and then replace DayType "weekday" with "weekend"
+IsSun <- ActualDay == "Sunday"
+DayType[IsSun] <- "weekend"
+IsSat <- ActualDay == "Saturday"
+DayType[IsSat] <- "weekend"
+DayType <- factor(DayType)
+## append data set with the day type
+NewData <- cbind(NewData,DayType)
+## average by interval and day type
+AveSteps <- aggregate(NewData,list(NewData$interval,NewData$DayType),FUN=mean)
+## plot the data
+xyplot(steps ~ Group.1 | Group.2, data = AveSteps, layout = c(1,2),type = "l",xlab = "5Min Int", ylab = "Ave Num Steps")
+```
