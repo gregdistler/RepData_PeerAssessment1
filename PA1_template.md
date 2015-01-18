@@ -37,16 +37,17 @@ summary(RawData)
 ```r
 ProcessData <- na.omit(RawData) ## remove NA's
 TotalStepsDay <- aggregate(.~date,data=ProcessData,FUN=sum) ## aggregate by date and sum steps
-hist(ProcessData$steps, main = "Total Steps Each Day", xlab = "Steps")
+hist(TotalStepsDay$steps, main = "Total Steps Each Day", xlab = "Steps")
 ```
 
 ![plot of chunk meansteps](figure/meansteps-1.png) 
 
 ```r
 MeanSteps <- mean(TotalStepsDay$steps)
+MedianSteps <- median(TotalStepsDay$steps)
 ```
 ### The mean number of steps taken is 10766.
-
+### The median number of steps taken is 10765.
 
 ## What is the average daily activity pattern?
 
@@ -64,8 +65,32 @@ MaxIdx <- which.max(AveStepsDay$steps) ## find index of max value
 
 ### The 835 is the 5 minute interval, on average over all days, that contains the maximum number of steps
 
-## Imputing missing values
+## Find and replace the missing values with the average steps taken in that 5 minute interval
 
+```r
+IsNA <- is.na(RawData$steps) ## find the missing values
+NumNA <- sum(IsNA)  ## count the total number of missing observations
+IdxNA <- which(IsNA)
+AveStepsInt <- aggregate(.~interval,data=RawData,FUN=mean) ## ave steps for each interval
+NewData <- RawData ## newdata has the NA's filled in
+## loop over each NA value
+for (i in 1:length(IdxNA)) {
+    tempIdx <- which(NewData$interval[IdxNA[i]] == AveStepsInt$interval)
+    NewData$steps[IdxNA[i]] <- AveStepsInt$steps[tempIdx]
+}
+## plot filled in data
+TotalStepsDay_New <- aggregate(.~date,data=NewData,FUN=sum) ## aggregate by date and sum steps
+hist(TotalStepsDay_New$steps, main = "Total Steps Each Day (No NA's)", xlab = "Steps")
+```
 
+![plot of chunk missingvalues](figure/missingvalues-1.png) 
+
+```r
+MeanStepsNew <- mean(TotalStepsDay_New$steps)
+MedianStepsNew <- median(TotalStepsDay_New$steps)
+```
+### There are 2304 missing observations.
+### The mean number of steps after NA replacement is 10766.
+### The median number of steps after NA replacement is 10766.
 
 ## Are there differences in activity patterns between weekdays and weekends?

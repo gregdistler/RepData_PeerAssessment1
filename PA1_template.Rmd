@@ -23,11 +23,12 @@ summary(RawData)
 ```{r meansteps}
 ProcessData <- na.omit(RawData) ## remove NA's
 TotalStepsDay <- aggregate(.~date,data=ProcessData,FUN=sum) ## aggregate by date and sum steps
-hist(ProcessData$steps, main = "Total Steps Each Day", xlab = "Steps")
+hist(TotalStepsDay$steps, main = "Total Steps Each Day", xlab = "Steps")
 MeanSteps <- mean(TotalStepsDay$steps)
+MedianSteps <- median(TotalStepsDay$steps)
 ```
 ### The mean number of steps taken is `r sprintf("%0.0f",MeanSteps)`.
-
+### The median number of steps taken is `r sprintf("%0.0f",MedianSteps)`.
 
 ## What is the average daily activity pattern?
 ```{r dailypattern}
@@ -40,8 +41,28 @@ MaxIdx <- which.max(AveStepsDay$steps) ## find index of max value
 
 ### The `r AveStepsDay$interval[MaxIdx]` is the 5 minute interval, on average over all days, that contains the maximum number of steps
 
-## Imputing missing values
-
-
+## Find and replace the missing values with the average steps taken in that 5 minute interval
+```{r missingvalues}
+IsNA <- is.na(RawData$steps) ## find the missing values
+NumNA <- sum(IsNA)  ## count the total number of missing observations
+IdxNA <- which(IsNA)
+AveStepsInt <- aggregate(.~interval,data=RawData,FUN=mean) ## ave steps for each interval
+NewData <- RawData ## newdata has the NA's filled in
+## loop over each NA value
+for (i in 1:length(IdxNA)) {
+    tempIdx <- which(NewData$interval[IdxNA[i]] == AveStepsInt$interval)
+    NewData$steps[IdxNA[i]] <- AveStepsInt$steps[tempIdx]
+}
+## plot filled in data
+TotalStepsDay_New <- aggregate(.~date,data=NewData,FUN=sum) ## aggregate by date and sum steps
+hist(TotalStepsDay_New$steps, main = "Total Steps Each Day (No NA's)", xlab = "Steps")
+MeanStepsNew <- mean(TotalStepsDay_New$steps)
+MedianStepsNew <- median(TotalStepsDay_New$steps)
+```
+### There are `r NumNA` missing observations.
+### The mean number of steps after NA replacement is `r sprintf("%0.0f",MeanStepsNew)`.
+### The median number of steps after NA replacement is `r sprintf("%0.0f",MedianStepsNew)`.
+### The mean after replacement differs by `r sprintf("%0.0f",MeanSteps - MeanStepsNew)`.
+### The median after replacement differs by `r sprintf("%0.0f",MedianSteps - MedianStepsNew)`.
 
 ## Are there differences in activity patterns between weekdays and weekends?
